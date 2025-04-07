@@ -12,6 +12,17 @@ if not pr_diff.strip():
     print("No PR diff available.")
     exit(1)
 
+
+url = "https://raw.githubusercontent.com/padalat/Pr-CheckList/main/README.md"
+
+response = requests.get(url)
+readme_content=""
+if response.status_code == 200:
+    readme_content = response.text
+    print(readme_content)
+else:
+    print("Failed to fetch README:", response.status_code)
+    exit(1)
 # Prompt
 prompt = f"""
 You are a code review assistant. You are given:
@@ -31,14 +42,7 @@ Checklist Evaluation:
 PR Changes:
 {pr_diff}
 
-Checklist:
-- Is the code properly formatted?
-- Are there any hardcoded secrets or credentials?
-- Are the function and variable names meaningful?
-- Does the code have adequate comments and documentation?
-- Is there any unused or dead code?
-- Are there tests added or updated for the changes?
-- Are performance-sensitive areas optimized?
+{readme_content}
 """
 
 # LLM API endpoint
