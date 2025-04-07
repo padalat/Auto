@@ -3,6 +3,7 @@ import requests
 import json
 
 # Get PR Diff from environment variable
+print("working")
 pr_diff = os.getenv("PR_DIFF", "")
 pr_diff = pr_diff.replace("\\n", "\n")  # Convert escaped \n back to newlines
 
