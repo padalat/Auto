@@ -1,0 +1,40 @@
+name: PR Review Bot
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  pr_review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install requests
+
+      - name: Set up GitHub CLI
+        uses: cli/gh-action@v2
+        with:
+          version: latest
+
+      - name: Get PR diff and export to ENV
+        id: diff_step
+        run: |
+          gh pr diff ${{ github.event.pull_request.number }} --repo ${{ github.repository }} > pr.diff
+          # Escaping for ENV
+          ESCAPED_DIFF=$(cat pr.diff | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
+          echo "PR_DIFF=$ESCAPED_DIFF" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run review script
+        run: python .github/scripts/pr_review.py
