@@ -2,30 +2,35 @@ name: PR Review Bot
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, synchronize]
 
 jobs:
   pr-review:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 2  # Ensures we can compare with previous commit
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: 3.10
 
       - name: Install dependencies
         run: pip install requests
 
-      - name: Run PR review script
-        run: python3 .github/scripts/pr_review.py
+      - name: Generate PR diff and run review
+        run: |
+          echo "Generating PR diff..."
+          git fetch origin main
+          DIFF=$(git diff origin/main...HEAD)
+          export PR_DIFF="$DIFF"
+          echo "$DIFF" > pr_diff.txt
+          python3 .github/scripts/pr_review.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: ${{ github.ref }}
 
-      - name: Comment review
-        uses: peter-evans/create-or-update-comment@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: pr_review_output.txt
